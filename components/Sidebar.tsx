@@ -24,7 +24,7 @@ function Sidebar() {
     }
     const handleNewChat = async () =>{
         const chatId = await createChat({title: "New Chat" });
-        router.push(`/dashboard/chats/${chatId}`)
+        router.push(`/dashboard/chat/${chatId}`)
         closeMobileNav()
     }
     const handleDeleteChat = async (id: Id<"chats">) => {
