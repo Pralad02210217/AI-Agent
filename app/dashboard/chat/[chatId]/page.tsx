@@ -1,3 +1,4 @@
+import ChatInterface from "@/components/ChatInterface";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel"
 import { getConvexClient } from "@/lib/convex";
@@ -21,10 +22,10 @@ async function ChatPage({ params }: ChatPageProps) {
     try {
         const convex = getConvexClient();
     
-        const initailMessage = await convex.query(api.messages.list, { chatId })
+        const initaialMessage = await convex.query(api.messages.list, { chatId })
       return (
         <div className="flex-1 overflow-hidden">
-            <ChatInterface chatId={chatId} initailMessage= {initailMessage} />
+            <ChatInterface chatId={chatId} initialMessage= {initaialMessage} />
         </div>
       )
         
