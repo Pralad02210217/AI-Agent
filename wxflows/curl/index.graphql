@@ -1,0 +1,24 @@
+type CommentsEntry {
+  body: String
+  id: Int
+  likes: Int
+  postId: Int
+  user: User
+}
+
+type Root {
+  comments: [CommentsEntry]
+  limit: Int
+  skip: Int
+  total: Int
+}
+
+type User {
+  fullName: String
+  id: Int
+  username: String
+}
+
+type Query {
+  dummyCommentsQuery: Root @rest(endpoint: "https://dummyjson.com/comments")
+}
