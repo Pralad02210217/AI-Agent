@@ -12,7 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <NavigationProvider>
+      <NavigationProvider>
       <div className="flex h-screen">
         <Authenticated>
           <Sidebar />

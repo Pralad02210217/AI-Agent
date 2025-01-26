@@ -5,6 +5,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import wxflows from "@wxflows/sdk/langchain";
 // Add at the top
 import { GeminiToolCall } from "@/lib/types";
+import { ChatGroq } from "@langchain/groq"
 import {
     END,
     MemorySaver,
@@ -18,6 +19,8 @@ import {
     MessagesPlaceholder,
   } from "@langchain/core/prompts";
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage, trimMessages } from "@langchain/core/messages";
+import { use, useContext } from "react";
+import { ModelContext } from "./ModelProvider";
 
 
 //Customers at: https://introspection.apis.stepzen.com/customers
@@ -33,7 +36,7 @@ import { AIMessage, BaseMessage, HumanMessage, SystemMessage, trimMessages } fro
 //     startOn: "human"
 // })
 const trimmer = trimMessages({
-  maxTokens: 4000,
+  maxTokens: 8000,
   strategy: "last",
   tokenCounter: async (msgs) => {
     const total = msgs.reduce((acc, m) => acc + Math.ceil(m.content.length / 4), 0);
@@ -54,21 +57,35 @@ const toolClient = new wxflows({
   const tools = await toolClient.lcTools;
   const toolNode = new ToolNode(tools)
 
+
+
+
+
+  const geminiModel = new ChatGoogleGenerativeAI({
+    modelName: "gemini-1.5-flash",
+    apiKey: process.env.GEMINI_API_KEY,
+    temperature: 0.7,
+    maxOutputTokens: 4000,
+     
+    safetySettings: [
+      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE }
+    ],
+  })
+
+  const Groq = new ChatGroq({
+    modelName: "mixtral-8x7b-32768",
+    apiKey: process.env.GROQ_API_KEY,
+    temperature: 0.6,
+
+  })
+
   
-const initialiseModel = () => {
-    return new ChatGoogleGenerativeAI({
-      modelName: "gemini-1.5-flash",
-      apiKey: process.env.GEMINI_API_KEY,
-      temperature: 0.7,
-      maxOutputTokens: 4000,
-       
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE }
-      ],
-    }).bindTools(tools);
+  const initialiseModel = (currentModel: string) => {
+    const model = currentModel === 'gemini-1.5-flash' ? geminiModel : Groq;
+    return model.bindTools(tools);
   };
 
 function shouldContinue(state: typeof MessagesAnnotation.State) {
@@ -96,8 +113,8 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
   }
   
 
-  const createWorkflow = () => {
-    const model = initialiseModel();
+  const createWorkflow = (currentModel: string) => {
+    const model = initialiseModel(currentModel);
   
     const stateGraph = new StateGraph(MessagesAnnotation)
       .addNode("agent", async (state) => {
@@ -138,8 +155,8 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
 
 
 
-export async function submitQuestion(messages: BaseMessage[], chatId: string) {
-    const workflow = createWorkflow();
+export async function submitQuestion(messages: BaseMessage[], chatId: string,  currentModel: string) {
+    const workflow = createWorkflow(currentModel);
     const checkpointer = new MemorySaver();
     const app = workflow.compile({ checkpointer });
   

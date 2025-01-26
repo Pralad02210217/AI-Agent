@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { NavigationContext } from "@/lib/NavigationProvider";
 import { use } from "react";
+import ModelSelector from "./ModelSelector";
+import { ModelContext } from "@/lib/ModelProvider";
 // import { useNavigation } from "@/lib/context/navigation";
 
 export default function Header() {
@@ -25,6 +27,9 @@ export default function Header() {
           </Button>
           <div className="font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
             Chat with an AI Agent
+          </div>
+          <div className=" flex items-center font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+            <ModelSelector />
           </div>
         </div>
         <div className="flex items-center">

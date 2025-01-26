@@ -26,7 +26,7 @@ export async function POST(req: Request){
             throw new Response("Unauthorized", { status: 401 });
         }
         const body = (await req.json()) as ChatRequestBody
-        const { messages, newMessage, chatId } = body
+        const { messages, newMessage, chatId, model } = body
 
         const convex = getConvexClient()
 
@@ -65,7 +65,7 @@ export async function POST(req: Request){
 
                 try {
                   //create the event stream
-                  const eventStream = await submitQuestion(langChainMessages, chatId);
+                  const eventStream = await submitQuestion(langChainMessages, chatId, model);
 
                   // Process the events
                   for await (const event of eventStream) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { Doc, Id } from "@/convex/_generated/dataModel"
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import { ChatRequestBody, StreamMessageType } from "@/lib/types";
@@ -10,6 +10,7 @@ import { getConvexClient } from "@/lib/convex";
 import { api } from "@/convex/_generated/api";
 import MessageBubble from "./MessageBubble";
 import WelcomeMessage from "./WelcomeMessage";
+import { ModelContext } from "@/lib/ModelProvider";
 
 interface ChatInterfaceProps  {
     chatId: Id<"chats">
@@ -57,6 +58,9 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
         input: unknown;
     }| null >(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    
+const { currentModel } = useContext(ModelContext);
+
 
     const processStream = async (
         reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -78,6 +82,7 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
     },[messages, streamedResponse])
 
     const handleSumit = async (e: React.FormEvent)=>{
+      console.log(currentModel)
         e.preventDefault();
 
         const trimmedInput = input.trim();
@@ -108,7 +113,8 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
                     content: msg.content
                 })),
                 newMessage: trimmedInput,
-                chatId
+                chatId,
+                model: currentModel
             };
 
             //initialize SSE connection
@@ -194,6 +200,7 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
                         content: fullResponse,
                         role: "assistant",
                         createdAt: Date.now(),
+                        
                       } as Doc<"messages">;
         
                       // Save the complete message to the database
@@ -202,6 +209,7 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
                         chatId,
                         content: fullResponse,
                         role: "assistant",
+                        
                       });
         
                       setMessages((prev) => [...prev, assistantMessage]);

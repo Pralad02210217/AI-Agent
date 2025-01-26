@@ -64,7 +64,8 @@ export enum StreamMessageType {
 export interface ChatRequestBody {
     messages: Message[];
     newMessage: string;
-    chatId: Id<"chats">
+    chatId: Id<"chats">,
+    model: string
 }
 
 export interface GeminiToolCall {
