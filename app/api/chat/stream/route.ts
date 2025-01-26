@@ -71,26 +71,57 @@ export async function POST(req: Request){
                   for await (const event of eventStream) {
                     // console.log("🔄 Event:", event);
         
+                    // if (event.event === "on_chat_model_stream") {
+                    //   const token = event.data.chunk;
+                    //   if (token) {
+                    //     // Access the text property from the AIMessageChunk
+                    //     const text = token.content.at(0)?.["text"];
+                    //     if (text) {
+                    //       await sendSSEMessage(writer, {
+                    //         type: StreamMessageType.Token,
+                    //         token: text,
+                    //       });
+                    //     }
+                    //   }
+                    // } 
                     if (event.event === "on_chat_model_stream") {
-                      const token = event.data.chunk;
-                      if (token) {
-                        // Access the text property from the AIMessageChunk
-                        const text = token.content.at(0)?.["text"];
+                      const chunk = event.data.chunk;
+                      if (chunk?.content) {
+                        const text = Array.isArray(chunk.content) 
+                          ? chunk.content.map((c: { text: any; }) => c.text).join('')
+                          : chunk.content;
+                        
                         if (text) {
                           await sendSSEMessage(writer, {
                             type: StreamMessageType.Token,
-                            token: text,
+                            token: text
                           });
                         }
                       }
-                    } else if (event.event === "on_tool_start") {
-                      await sendSSEMessage(writer, {
-                        type: StreamMessageType.ToolStart,
-                        tool: event.name || "unknown",
-                        input: event.data.input,
-                      });
-                    } else if (event.event === "on_tool_end") {
+                    }
+                    // else if (event.event === "on_tool_start") {
+                    //   await sendSSEMessage(writer, {
+                    //     type: StreamMessageType.ToolStart,
+                    //     tool: event.name || "unknown",
+                    //     input: event.data.input,
+                    //   });
+                    // } 
+                    else if (event.event === "on_tool_start") {
+                      // Gemini uses different event structure
+                      const toolCall = (event.data as any).toolCall || 
+                                      (event.data.input?.tool_calls?.[0]);
+                      
+                      if (toolCall) {
+                          await sendSSEMessage(writer, {
+                              type: StreamMessageType.ToolStart,
+                              tool: toolCall.name || toolCall.function?.name,
+                              input: toolCall.args || JSON.parse(toolCall.function?.arguments || "{}")
+                          });
+                      }
+                  }
+                    else if (event.event === "on_tool_end") {
                       const toolMessage = new ToolMessage(event.data.output);
+                      console.log(toolMessage)
         
                       await sendSSEMessage(writer, {
                         type: StreamMessageType.ToolEnd,
@@ -129,7 +160,7 @@ export async function POST(req: Request){
             }
         }
         startStream();
-
+        return response;
     } catch (error) {
         console.error("Error in Chat API: ", error)
         return NextResponse.json(

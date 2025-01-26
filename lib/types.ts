@@ -66,3 +66,20 @@ export interface ChatRequestBody {
     newMessage: string;
     chatId: Id<"chats">
 }
+
+export interface GeminiToolCall {
+  function: {
+      name: string;
+      arguments: string;
+  };
+  id: string;
+  type: "function";
+}
+
+declare module "@langchain/langgraph" {
+  interface AIMessage {
+      additional_kwargs: {
+          toolCalls?: GeminiToolCall[];
+      };
+  }
+}

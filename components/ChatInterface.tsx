@@ -8,7 +8,8 @@ import { ChatRequestBody, StreamMessageType } from "@/lib/types";
 import { createSSEParser } from "@/lib/createSSEParser";
 import { getConvexClient } from "@/lib/convex";
 import { api } from "@/convex/_generated/api";
-import MessageBubble from "./messageBubble";
+import MessageBubble from "./MessageBubble";
+import WelcomeMessage from "./WelcomeMessage";
 
 interface ChatInterfaceProps  {
     chatId: Id<"chats">
@@ -26,6 +27,9 @@ const formatToolOutput = (output: unknown): string => {
     input: unknown,
     output: unknown
   ) => {
+    const formattedInput = typeof input === "object" 
+    ? JSON.stringify(input, null, 2)
+    : String(input)
     const terminalHtml = `<div class="bg-[#1e1e1e] text-white font-mono p-2 rounded-md my-2 overflow-x-auto whitespace-normal max-w-[600px]">
       <div class="flex items-center gap-1.5 border-b border-gray-700 pb-1">
         <span class="text-red-500">●</span>
@@ -121,6 +125,7 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
               //Create SSE parser and stream reader
               const parser = createSSEParser()
               const reader = response.body.getReader()
+              console.log("Inside ChatInterface: ", reader)
 
               await processStream(reader, async (chunk) => {
                 // Parse SSE messages from the chunk
@@ -228,6 +233,7 @@ function ChatInterface({ chatId, initialMessage}: ChatInterfaceProps) {
     <main className="flex flex-col h-[calc(100vh-theme(spacing.14))]">
         <section className="flex-1 overflow-y-auto bg-gray-50 p-2 md:p-0">    
             <div className="max-w-4xl mx-auto p-4 space-y-3">
+              {messages?.length === 0 && <WelcomeMessage />}
             {messages?.map((message: Doc<"messages">) => (
                 <MessageBubble
                 key={message._id}
