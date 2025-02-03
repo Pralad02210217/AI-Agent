@@ -36,7 +36,7 @@ import { ModelContext } from "./ModelProvider";
 //     startOn: "human"
 // })
 const trimmer = trimMessages({
-  maxTokens: 8000,
+  maxTokens: 5000,
   strategy: "last",
   tokenCounter: async (msgs) => {
     const total = msgs.reduce((acc, m) => acc + Math.ceil(m.content.length / 4), 0);
@@ -65,6 +65,7 @@ const toolClient = new wxflows({
     modelName: "gemini-1.5-flash",
     apiKey: process.env.GEMINI_API_KEY,
     temperature: 0.7,
+    maxRetries: 5,
     maxOutputTokens: 4000,
      
     safetySettings: [
@@ -78,6 +79,8 @@ const toolClient = new wxflows({
   const Groq = new ChatGroq({
     modelName: "mixtral-8x7b-32768",
     apiKey: process.env.GROQ_API_KEY,
+    maxRetries: 4,
+    maxTokens: 5000,
     temperature: 0.6,
 
   })
